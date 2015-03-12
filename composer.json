@@ -1,0 +1,17 @@
+{
+    "name": "herold/libinternetx",
+    "description": "PHP Library for InternetX XML backend",
+    "license": "GPL-3.0+",
+    "authors": [
+        {
+            "name": "Michael Herold",
+            "email": "quabla@hemio.de"
+        }
+    ],
+    "require": {},
+    "autoload": {
+        "psr-4": {
+            "herold\\libinternetx\\": "src/class/"
+        }
+    }
+}
