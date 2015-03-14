@@ -8,7 +8,10 @@
             "email": "quabla@hemio.de"
         }
     ],
-    "require": {},
+    "require": {
+        "aura/cli": "~2.0",
+        "ulrichsg/getopt-php": "~2.2"
+    },
     "autoload": {
         "psr-4": {
             "herold\\libinternetx\\": "src/class/"
