@@ -9,7 +9,6 @@
         }
     ],
     "require": {
-        "aura/cli": "~2.0",
         "ulrichsg/getopt-php": "~2.2"
     },
     "autoload": {
