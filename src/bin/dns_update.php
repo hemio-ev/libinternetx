@@ -26,15 +26,17 @@ use herold\libinternetx as api;
 $getopt = new Getopt\Getopt(
     [
         (new Getopt\Option('h', 'help'))
-        ->setDescription('Prints this help'),
-        (new Getopt\Option('d', 'database', Getopt\Getopt::REQUIRED_ARGUMENT))
-        ->setDescription('Database URI (required)'),
-        (new Getopt\Option('u', 'user', Getopt\Getopt::REQUIRED_ARGUMENT))
-        ->setDescription('API user (required)'),
-        (new Getopt\Option('p', 'password', Getopt\Getopt::REQUIRED_ARGUMENT))
-        ->setDescription('API password (required)'),
-        (new Getopt\Option('f', 'force-update'))
+        ->setDescription('Prints this help')
+    , (new Getopt\Option('d', 'database', Getopt\Getopt::REQUIRED_ARGUMENT))
+        ->setDescription('Database URI (required)')
+    , (new Getopt\Option('u', 'user', Getopt\Getopt::REQUIRED_ARGUMENT))
+        ->setDescription('API user (required)')
+    , (new Getopt\Option('p', 'password', Getopt\Getopt::REQUIRED_ARGUMENT))
+        ->setDescription('API password (required)')
+    , (new Getopt\Option('f', 'force-update'))
         ->setDescription('Force update of unchanged registered domains')
+    , (new Getopt\Option('v', 'verbose', Getopt\Getopt::NO_ARGUMENT))
+        ->setDescription('Verbose')
     ]
 );
 
@@ -49,6 +51,7 @@ if (
     exit(2);
 }
 
+$debug = $getopt->getOption('verbose');
 
 $pdo = new PDO($getopt->getOption('database'));
 $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
@@ -58,11 +61,18 @@ $pdo->beginTransaction();
 if ($getopt->getOption('force-update'))
 // get all registered domains
     $registered = $pdo->query('SELECT registered FROM dns.srv_all()'.
-        ' WHERE managed GROUP BY registered');
+            ' GROUP BY registered')->fetchAll();
 else
 // get all registered domains with NOT NULL backend status
     $registered = $pdo->query('SELECT registered FROM dns.srv_all()'.
-        ' WHERE managed AND backend_status IS NOT NULL GROUP BY registered');
+            ' WHERE backend_status IS NOT NULL GROUP BY registered')
+        ->fetchAll();
+
+if (empty($registered)) {
+    if ($debug)
+        echo "No updates to be done.\n";
+    exit(0);
+}
 
 $getRecords = $pdo->prepare('SELECT domain, type, rdata, ttl FROM dns.srv_all() WHERE registered=?');
 
@@ -74,15 +84,18 @@ $request->addAuth(
     , '4'
 );
 
-while ($domain = $registered->fetch()) {
+foreach ($registered as $domain) {
     $name = $domain['registered'];
+
+    if ($debug)
+        echo "Processing ${name} …\n";
 
     $zoneUpdate = new api\ZoneUpdate($request);
 
     $zoneUpdate->addName($name);
 
     $zoneUpdate->addNsAction('complete');
-    # Set to 1 at some point
+    // TODO: Set to 1 at some point
     $zoneUpdate->addSoaLevel('3');
     $zoneUpdate->addWwwInclude('0');
 
@@ -105,19 +118,20 @@ while ($domain = $registered->fetch()) {
         } elseif ($type == 'CNAME') {
             $data = $rdata->cname;
         } elseif ($type == 'MX') {
-            $data = $rdata->mailserver;
+            $data = $rdata->exchange;
             $pref = $rdata->priority;
-        } else if ($ttl == 'SRV') {
+        } else if ($type == 'SRV') {
             $domain = sprintf('_%s._%s.%s', $rdata->service, $rdata->proto,
                               $domain);
-            $pref   = sprintf("%s %s %s", $rdata->priority, $rdata->weight,
-                              $rdata->port);
+            $pref   = $rdata->priority;
+            $data   = sprintf("%s %s %s", $rdata->weight, $rdata->port,
+                              $rdata->target);
         } else {
             throw new Exception('Unknown type '.$type);
         }
 
         if ($ttl === null)
-            $ttl = 86400;
+            $ttl = 320;#$ttl = 86400;
 
         $zoneUpdate->addResourceRecord(
             $domain
@@ -128,6 +142,9 @@ while ($domain = $registered->fetch()) {
         );
     }
 }
+
+if ($debug)
+    echo $request->doc->saveXML();
 
 $request->execute();
 

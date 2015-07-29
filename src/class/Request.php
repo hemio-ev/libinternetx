@@ -122,16 +122,17 @@ class Request
     {
         $data = $this->doc->saveXML();
 
-        $ch   = curl_init(self::HOST);
+        $ch = curl_init(self::HOST);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        #curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
+
         if (!$data = curl_exec($ch)) {
             throw new \Exception(curl_error($ch));
         }
 
         file_put_contents('response.xml', $data);
-        $xml = \DOMDocument::loadXML($data);
+        $xml = new \DOMDocument();
+        $xml->loadXML($data);
 
         if ($xml === false)
             throw new \Exception('Failed to parse request response as XML');

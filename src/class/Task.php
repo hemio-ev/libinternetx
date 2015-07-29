@@ -43,7 +43,8 @@ abstract class Task
      */
     public $request;
 
-    public abstract static function code();
+    // TODO: Wait until abstract static functions are allowed in PHP again
+    #public abstract static function code();
 
     public function __construct(Request $request)
     {
