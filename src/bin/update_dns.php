@@ -20,26 +20,9 @@
 chdir('../../');
 require_once 'vendor/autoload.php';
 
-use Ulrichsg\Getopt;
 use herold\libinternetx as api;
 
-$getopt = new Getopt\Getopt(
-    [
-        (new Getopt\Option('h', 'help'))
-        ->setDescription('Prints this help')
-    , (new Getopt\Option('d', 'database', Getopt\Getopt::REQUIRED_ARGUMENT))
-        ->setDescription('Database URI (required)')
-    , (new Getopt\Option('u', 'user', Getopt\Getopt::REQUIRED_ARGUMENT))
-        ->setDescription('API user (required)')
-    , (new Getopt\Option('p', 'password', Getopt\Getopt::REQUIRED_ARGUMENT))
-        ->setDescription('API password (required)')
-    , (new Getopt\Option('f', 'force-update'))
-        ->setDescription('Force update of unchanged registered domains')
-    , (new Getopt\Option('v', 'verbose', Getopt\Getopt::NO_ARGUMENT))
-        ->setDescription('Verbose')
-    ]
-);
-
+$getopt = new api\CmdOpt();
 $getopt->parse();
 
 if (
