@@ -17,18 +17,27 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-chdir('../../');
+chdir(__DIR__.'/../../');
 require_once 'vendor/autoload.php';
 
 use herold\libinternetx as api;
+use Ulrichsg\Getopt;
 
 $getopt = new api\CmdOpt();
+
+$getopt->addOptions([
+        (new Getopt\Option('l', 'soa-level', Getopt\Getopt::REQUIRED_ARGUMENT))
+        ->setDescription('Use predefined SOA level. Possible Values are '.
+            '1 (Recommended Settings), 2 (High Reliability), and 3 (Fast Updates)')
+]);
+
 $getopt->parse();
 
 if (
     !$getopt->getOption('database') ||
     !$getopt->getOption('user') ||
-    !$getopt->getOption('password')
+    !$getopt->getOption('password') ||
+    !in_array($getopt->getOption('soa-level'), [1, 2, 3])
 ) {
     echo $getopt->getHelpText();
     exit(2);
@@ -43,11 +52,12 @@ $pdo->beginTransaction();
 
 if ($getopt->getOption('force-update'))
 // get all registered domains
-    $registered = $pdo->query('SELECT registered FROM dns.srv_all()'.
+    $registered = $pdo->query('SELECT registered FROM dns.srv_record()'.
             ' GROUP BY registered')->fetchAll();
 else
-// get all registered domains with NOT NULL backend status
-    $registered = $pdo->query('SELECT registered FROM dns.srv_all()'.
+// get all registered domains with NOT NULL backend status for records
+// also if records have been deleted (p_include_inactive)
+    $registered = $pdo->query('SELECT registered FROM dns.srv_record(p_include_inactive:=TRUE)'.
             ' WHERE backend_status IS NOT NULL GROUP BY registered')
         ->fetchAll();
 
@@ -57,7 +67,7 @@ if (empty($registered)) {
     exit(0);
 }
 
-$getRecords = $pdo->prepare('SELECT domain, type, rdata, ttl FROM dns.srv_all() WHERE registered=?');
+$getRecords = $pdo->prepare('SELECT domain, type, rdata, ttl FROM dns.srv_record() WHERE registered=?');
 
 $request = new api\Request();
 
@@ -78,8 +88,7 @@ foreach ($registered as $domain) {
     $zoneUpdate->addName($name);
 
     $zoneUpdate->addNsAction('complete');
-    // TODO: Set to 1 at some point
-    $zoneUpdate->addSoaLevel('3');
+    $zoneUpdate->addSoaLevel($getopt->getOption('soa-level'));
     $zoneUpdate->addWwwInclude('0');
 
     $zoneUpdate->addNameserver('a.ns14.net');
@@ -112,9 +121,6 @@ foreach ($registered as $domain) {
         } else {
             throw new Exception('Unknown type '.$type);
         }
-
-        if ($ttl === null)
-            $ttl = 320;#$ttl = 86400;
 
         $zoneUpdate->addResourceRecord(
             $domain

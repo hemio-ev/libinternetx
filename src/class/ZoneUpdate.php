@@ -77,7 +77,8 @@ class ZoneUpdate extends Task
         return $ns;
     }
 
-    public function addResourceRecord($name, $type, $value, $ttl, $pref = null)
+    public function addResourceRecord($name, $type, $value, $ttl = null,
+                                      $pref = null)
     {
         $rr = new \DOMElement('rr');
         $this->zone->appendChild($rr);
@@ -85,7 +86,8 @@ class ZoneUpdate extends Task
         $rr->appendChild(new \DOMElement('name', $name));
         $rr->appendChild(new \DOMElement('type', $type));
         $rr->appendChild(new \DOMElement('value', $value));
-        $rr->appendChild(new \DOMElement('ttl', (string) $ttl));
+        if ($ttl)
+            $rr->appendChild(new \DOMElement('ttl', (string) $ttl));
 
         if ($pref !== null)
             $rr->appendChild(new \DOMElement('pref', $pref));
