@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-chdir('../../');
+chdir(__DIR__.'/../../');
 require_once 'vendor/autoload.php';
 
 use herold\libinternetx as api;
@@ -84,9 +84,9 @@ foreach ($handles as $handle) {
 
         $request = $newRequest();
 
-        $handleInquire = new api\HandleInquire($request);
-        $handleInquire->addKeys(['id']);
-        $handleInquire->task
+        $domainInquire = new api\HandleInquire($request);
+        $domainInquire->addKeys(['id']);
+        $domainInquire->task
             ->appendChild(new \DOMElement('handle'))
             ->appendChild(new \DOMElement('alias', $alias));
 
@@ -95,7 +95,7 @@ foreach ($handles as $handle) {
 
         $request->execute();
 
-        $handleEnquireData = api\Utils::toArray($handleInquire->getData()[0]);
+        $handleEnquireData = api\Utils::toArray($domainInquire->getData()[0]);
 
         if ($alias === $handleEnquireData['alias']) {
             $handle['id'] = $handleEnquireData['id'];
@@ -126,3 +126,4 @@ if ($debug)
 $requestUpdateCreate->execute();
 
 $pdo->commit();
+

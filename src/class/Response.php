@@ -47,12 +47,19 @@ class Response
 
     /**
      *
+     * @var boolean
+     */
+    private $throwExceptions = false;
+
+    /**
+     *
      * @param \DOMDocument $doc
      */
-    public function __construct(\DOMDocument $doc)
+    public function __construct(\DOMDocument $doc, $throwExceptions = false)
     {
-        $this->doc      = $doc;
-        $this->response = $doc->documentElement;
+        $this->throwExceptions = $throwExceptions;
+        $this->doc             = $doc;
+        $this->response        = $doc->documentElement;
 
         if ($this->response->tagName !== 'response')
             throw new \Exception('Response has no element "response"');
@@ -64,19 +71,22 @@ class Response
     {
         $results = $this->response->getElementsByTagName('result');
 
-        $errorsPresent = false;
         foreach ($results as $result) {
             $msgs   = $result->getElementsByTagName('msg');
             $status = Utils::getUniqueTag($result, 'status');
 
             if (Utils::getUniqueTagContent($status, 'type') === 'error') {
-                $errorsPresent = true;
+                $code = Utils::getUniqueTagContent($status, 'code');
+                $text = Utils::getUniqueTagContent($status, 'text');
+
+                if ($this->throwExceptions)
+                    throw new ApiException($text, ltrim($code, 'E'));
+
                 trigger_error(
                     sprintf(
                         self::WARNING_FORMAT
-                        ,
-                        Utils::getUniqueTagContent($status, 'code')
-                        , Utils::getUniqueTagContent($status, 'text')
+                        , $code
+                        , $text
                     )
                     , E_USER_WARNING
                 );

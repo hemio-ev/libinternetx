@@ -51,11 +51,18 @@ class Request
      */
     private $serial = 0;
 
-    public function __construct()
+    /**
+     *
+     * @var boolean
+     */
+    private $throwExceptions = false;
+
+    public function __construct($throwExceptions = false)
     {
-        $domImpl       = new \DOMImplementation();
-        $this->doc     = $domImpl->createDocument(null, 'request');
-        $this->request = $this->doc->documentElement;
+        $this->throwExceptions = $throwExceptions;
+        $domImpl               = new \DOMImplementation();
+        $this->doc             = $domImpl->createDocument(null, 'request');
+        $this->request         = $this->doc->documentElement;
     }
 
     public function addAuth($user, $password, $context)
@@ -137,6 +144,6 @@ class Request
         if ($xml === false)
             throw new \Exception('Failed to parse request response as XML');
 
-        $this->response = new Response($xml);
+        $this->response = new Response($xml, $this->throwExceptions);
     }
 }
