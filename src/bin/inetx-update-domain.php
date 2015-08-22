@@ -199,18 +199,19 @@ foreach ($existingDomains as $domain) {
 
         $fwdBackendStatus->execute([$name, null]);
     } catch (api\ApiException $e) {
-        echo $e->getTraceAsString();
+        echo '<3><ERROR> '.$e->getMessage().PHP_EOL.$e->getTraceAsString().PHP_EOL;
     }
 }
 
 // remaining domains that have not been registered
 if (!empty($forCreationDomains))
-    echo 'Domains which still need to be registered: '
+    echo '<3>Domains which still need to be registered: '
     .print_r($forCreationDomains, true);
 
 // remaining domain that have not been deleted
 if (!empty($forDeletionDomains))
-    echo 'Domains which still need to be deleted: '
+    echo '<3>Domains which still need to be deleted: '
     .print_r($forDeletionDomains, true);
 
 $pdo->commit();
+

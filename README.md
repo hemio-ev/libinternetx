@@ -2,7 +2,7 @@
 
 ### Dependencies
 
-    apt-get install composer php5-cli php5-pgsql
+    apt-get install composer php5-cli php5-pgsql php5-curl
 
 ### Setup Binaries
 
