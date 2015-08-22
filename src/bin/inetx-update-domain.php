@@ -169,6 +169,8 @@ foreach ($existingDomains as $domain) {
         echo "Updating Owner-C for ${name} …\n";
 
     try {
+        $domainData = $newDomainLookup($name);
+
         $request = $newRequest();
 
         $ownerc = $domain['registrant_id'];
@@ -185,6 +187,18 @@ foreach ($existingDomains as $domain) {
         if (!$zonec)
             $zonec = $getopt->getOption('zone-c');
 
+
+        if ($domainData['ownerc'] == $ownerc &&
+            $domainData['adminc'] == $adminc &&
+            $domainData['techc'] == $techc &&
+            $domainData['zonec'] == $zonec
+        ) {
+            if ($debug)
+                echo "Nothing to change for {$name}, continue with next\n";
+
+            continue;
+        }
+
         $domainUpdate = new api\DomainUpdate($request);
 
         $taskData = $domainUpdate->task->appendChild(new \DOMElement('domain'));
@@ -199,7 +213,10 @@ foreach ($existingDomains as $domain) {
 
         $fwdBackendStatus->execute([$name, null]);
     } catch (api\ApiException $e) {
-        echo '<3><ERROR> '.$e->getMessage().PHP_EOL.$e->getTraceAsString().PHP_EOL;
+        if ($e->getCode() == '0105')
+            echo "<3><ERROR> Domain '{$name}' not found\n";
+        else
+            echo '<3><ERROR> '.$e->getMessage().PHP_EOL.$e->getTraceAsString().PHP_EOL;
     }
 }
 
