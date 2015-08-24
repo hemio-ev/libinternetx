@@ -125,6 +125,21 @@ class Request
         return $this->response->getData($serial);
     }
 
+    /**
+     *
+     * @param \herold\libinternetx\Task $task
+     * @return \DOMElement
+     * @throws \Exception
+     */
+    public function getStatus(Task $task)
+    {
+        if ($this->response === null)
+            throw new \Exception('You have to execute() first');
+
+        $serial = $task->task->getAttribute('serial');
+        return $this->response->getStatus($serial);
+    }
+
     public function execute()
     {
         $data = $this->doc->saveXML();
@@ -136,6 +151,8 @@ class Request
         if (!$data = curl_exec($ch)) {
             throw new \Exception(curl_error($ch));
         }
+
+        curl_close($ch);
 
         file_put_contents('response.xml', $data);
         $xml = new \DOMDocument();

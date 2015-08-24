@@ -46,7 +46,7 @@ if ($getopt->getOption('force-update'))
     $handles = $pdo->query('SELECT * FROM domain_reseller.srv_handle()')->fetchAll(PDO::FETCH_ASSOC);
 else
 // get all registered domains with NOT NULL backend status
-    $handles = $pdo->query('SELECT * FROM domain_reseller.srv_handle()'
+    $handles = $pdo->query('SELECT * FROM domain_reseller.srv_handle(p_include_inactive := TRUE)'
             .' WHERE backend_status IS NOT NULL OR id IS NULL')
         ->fetchAll(PDO::FETCH_ASSOC);
 
@@ -73,8 +73,11 @@ $fwdHandleId = $pdo->prepare('SELECT domain_reseller.fwd_handle_id(p_alias := ?,
 
 $requestUpdateCreate = $newRequest();
 
+$created = [];
 foreach ($handles as $handle) {
-    $alias = $handle['alias'];
+    $alias         = $handle['alias'];
+    $backendStatus = $handle['backend_status'];
+
     if ($debug)
         echo "Processing ${alias} …\n";
 
@@ -112,8 +115,12 @@ foreach ($handles as $handle) {
 
     if ($handle['id'] === null) {
         unset($handle['id']);
-        $handleCreate = new api\HandleCreate($requestUpdateCreate);
+        $handleCreate    = new api\HandleCreate($requestUpdateCreate);
         $handleCreate->addHandle($handle, $handle['email']);
+        $created[$alias] = $handleCreate;
+    } elseif ($backendStatus == 'del') {
+        $handleDelete = new api\HandleDelete($requestUpdateCreate);
+        $handleDelete->addHandle($handle['id'], $handle['email']);
     } else {
         $handleUpdate = new api\HandleUpdate($requestUpdateCreate);
         $handleUpdate->addHandle($handle, $handle['email']);
@@ -124,6 +131,9 @@ if ($debug)
     echo $requestUpdateCreate->doc->saveXML();
 
 $requestUpdateCreate->execute();
+
+foreach ($created as $alias => $task)
+    $fwdHandleId->execute([$alias, $task->getId()]);
 
 $pdo->commit();
 

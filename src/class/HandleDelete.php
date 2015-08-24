@@ -19,35 +19,27 @@
 namespace herold\libinternetx;
 
 /**
- * Description of HandleUpdate
+ * 
  *
  * @author Michael Herold <quabla@hemio.de>
  */
-class HandleCreate extends Task
+class HandleDelete extends TaskInquire
 {
 
     public static function code()
     {
-        return '0301';
+        return '0303';
     }
 
     /**
      *
-     * @param array $data
+     * @param integer $handleId
      * @param string $replyToEmail
      */
-    public function addHandle(array $data, $replyToEmail)
+    public function addHandle($handleId, $replyToEmail)
     {
         $this->task->appendChild(new \DOMElement('reply_to', $replyToEmail));
         $handle = $this->task->appendChild(new \DOMElement('handle'));
-
-        Utils::fromArray($handle, $data);
-    }
-
-    public function getId()
-    {
-        $data   = $this->request->getStatus($this);
-        $object = Utils::getUniqueTag($data, 'object');
-        return Utils::getUniqueTagContent($object, 'value');
+        $handle->appendChild(new \DOMElement('id', $handleId));
     }
 }

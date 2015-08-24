@@ -107,4 +107,10 @@ class Response
         $result = $this->response->getElementsByTagName('result')[$serial];
         return Utils::getUniqueTag($result, 'data');
     }
+
+    public function getStatus($serial)
+    {
+        $result = $this->response->getElementsByTagName('result')[$serial];
+        return Utils::getUniqueTag($result, 'status');
+    }
 }

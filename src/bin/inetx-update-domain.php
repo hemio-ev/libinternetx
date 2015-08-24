@@ -209,6 +209,7 @@ foreach ($existingDomains as $domain) {
         $taskData->appendChild(new \DOMElement('techc', $techc));
         $taskData->appendChild(new \DOMElement('zonec', $zonec));
 
+        usleep(10 * 1000);
         $request->execute();
 
         $fwdBackendStatus->execute([$name, null]);
