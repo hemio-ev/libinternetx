@@ -111,7 +111,9 @@ foreach ($handles as $handle) {
     unset($handle['service_entity_name']);
     unset($handle['owner']);
     unset($handle['backend_status']);
-    $handle['type'] = 'PERSON';
+
+    $handle['type']                = 'PERSON';
+    $handle['force_handle_create'] = '1';
 
     if ($handle['id'] === null) {
         unset($handle['id']);
