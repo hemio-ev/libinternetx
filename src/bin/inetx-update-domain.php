@@ -196,6 +196,8 @@ foreach ($existingDomains as $domain) {
             if ($debug)
                 echo "Nothing to change for {$name}, continue with next\n";
 
+            $fwdBackendStatus->execute([$name, null]);
+
             continue;
         }
 
