@@ -89,4 +89,12 @@ class Utils
 
         return $element;
     }
+
+    public static function zeroDateToNull(\DateTimeInterface $date)
+    {
+        if ($date->getTimestamp())
+            return $date;
+        else
+            return null;
+    }
 }
