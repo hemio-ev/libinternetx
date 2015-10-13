@@ -112,7 +112,7 @@ $newDomainLookup = function ($name) use ($newRequest, $debug, $fwdStatus) {
 
     $fwdStatus->execute([
         $data['name'],
-        api\Utils::zeroDateToNull($data['payable']),
+        api\Utils::sqlDate($data['payable']),
         $data['period'],
         $data['registrar_status'],
         $data['registry_status'],

@@ -98,8 +98,9 @@ class Utils
     public static function sqlDate($dateTimeStr)
     {
         $dateTimeObj = new \DateTimeImmutable($dateTimeStr);
-        if ($dateTimeObj->getTimestamp())
-            return $dateTimeObj->format(\DateTime::ISO8601);
+
+        if ($dateTimeObj->format('Y') > 1970)
+            return $dateTimeObj->format(\DateTime::ATOM);
         else
             return null;
     }
