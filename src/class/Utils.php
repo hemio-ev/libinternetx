@@ -90,10 +90,16 @@ class Utils
         return $element;
     }
 
-    public static function zeroDateToNull(\DateTimeInterface $date)
+    /**
+     *
+     * @param type $dateTimeStr
+     * @return \DateTime
+     */
+    public static function sqlDate($dateTimeStr)
     {
-        if ($date->getTimestamp())
-            return $date;
+        $dateTimeObj = new \DateTimeImmutable($dateTimeStr);
+        if ($dateTimeObj->getTimestamp())
+            return $dateTimeObj->format(\DateTime::ISO8601);
         else
             return null;
     }
