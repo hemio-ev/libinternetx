@@ -105,21 +105,39 @@ foreach ($registered as $domain) {
         $ttl    = $record['ttl'];
         $pref   = null;
 
-        if ($type == 'A' || $type == 'AAAA') {
-            $data = $rdata->address;
-        } elseif ($type == 'CNAME') {
-            $data = $rdata->cname;
-        } elseif ($type == 'MX') {
-            $data = $rdata->exchange;
-            $pref = $rdata->priority;
-        } else if ($type == 'SRV') {
-            $domain = sprintf('_%s._%s.%s', $rdata->service, $rdata->proto,
-                              $domain);
-            $pref   = $rdata->priority;
-            $data   = sprintf("%s %s %s", $rdata->weight, $rdata->port,
-                              $rdata->target);
-        } else {
-            throw new Exception('Unknown type '.$type);
+        switch ($type) {
+            case 'A':
+            case 'AAAA':
+                $data = $rdata->address;
+                break;
+
+            case 'CNAME':
+                $data = $rdata->cname;
+                break;
+
+            case 'MX':
+                $data = $rdata->exchange;
+                $pref = $rdata->priority;
+                break;
+
+            case 'NS':
+                $data = $rdata->nsdname;
+                break;
+
+            case 'SRV':
+                $domain = sprintf('_%s._%s.%s', $rdata->service, $rdata->proto,
+                                  $domain);
+                $pref   = $rdata->priority;
+                $data   = sprintf("%s %s %s", $rdata->weight, $rdata->port,
+                                  $rdata->target);
+                break;
+
+            case 'TXT':
+                $data = implode('', $rdata->txtdata);
+                break;
+
+            default:
+                throw new Exception('Unknown type '.$type);
         }
 
         $zoneUpdate->addResourceRecord(
