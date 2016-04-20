@@ -228,17 +228,23 @@ if (!empty($forCreationDomains))
     echo '<3>Domains which still need to be registered: '
     . print_r($forCreationDomains, true);
 
-foreach ($forDeletionDomains as $domain) {
-    $request = $newRequest();
-    $domainCancelationInquire = new api\DomainCancelationInquire($request);
-    $domainCancelationInquire->task
-            ->appendChild(new \DOMElement('cancelation'))
-            ->appendChild(new \DOMElement('domain', $domain['domain']));
-    $request->execute();
-    $data = api\Utils::toArray($domainInquire->getData()[0]);
-    print_r($data);
-}
+// remove domains that are scheduled for deletion
+foreach ($forDeletionDomains as $key => $domain) {
+    try {
+        $request = $newRequest();
+        $domainCancelationInquire = new api\DomainCancelationInquire($request);
+        $domainCancelationInquire->task
+                ->appendChild(new \DOMElement('cancelation'))
+                ->appendChild(new \DOMElement('domain', $domain['domain']));
+        $request->execute();
+        $data = api\Utils::toArray($domainCancelationInquire->getData()[0]);
 
+        unset($forDeletionDomains[$key]);
+    } catch (api\ApiException $e) {
+        if ($e->getCode() != 103104)
+            throw $e;
+    }
+}
 
 // remaining domain that have not been deleted
 if (!empty($forDeletionDomains))
@@ -246,4 +252,3 @@ if (!empty($forDeletionDomains))
     . print_r($forDeletionDomains, true);
 
 $pdo->commit();
-
