@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-chdir(__DIR__.'/../../');
+chdir(__DIR__ . '/../../');
 require_once 'vendor/autoload.php';
 
 use herold\libinternetx as api;
@@ -26,20 +26,20 @@ use Ulrichsg\Getopt;
 $getopt = new api\CmdOpt();
 
 $getopt->addOptions([
-        (new Getopt\Option(null, 'tech-c', Getopt\Getopt::REQUIRED_ARGUMENT))
-        ->setDescription('Default TechC (handle id)'),
-        (new Getopt\Option(null, 'zone-c', Getopt\Getopt::REQUIRED_ARGUMENT))
-        ->setDescription('Default ZoneC (handle id)')
+            (new Getopt\Option(null, 'tech-c', Getopt\Getopt::REQUIRED_ARGUMENT))
+            ->setDescription('Default TechC (handle id)'),
+            (new Getopt\Option(null, 'zone-c', Getopt\Getopt::REQUIRED_ARGUMENT))
+            ->setDescription('Default ZoneC (handle id)')
 ]);
 
 $getopt->parse();
 
 if (
-    !$getopt->getOption('database') ||
-    !$getopt->getOption('user') ||
-    !$getopt->getOption('password') ||
-    !$getopt->getOption('tech-c') ||
-    !$getopt->getOption('zone-c')
+        !$getopt->getOption('database') ||
+        !$getopt->getOption('user') ||
+        !$getopt->getOption('password') ||
+        !$getopt->getOption('tech-c') ||
+        !$getopt->getOption('zone-c')
 ) {
     echo $getopt->getHelpText();
     exit(2);
@@ -54,21 +54,21 @@ $pdo->beginTransaction();
 
 if ($getopt->getOption('force-update'))
     $existingDomains = $pdo->query('SELECT * FROM domain_reseller.srv_registered()'
-            .' WHERE backend_status = \'upd\' OR backend_status IS NULL')->fetchAll(PDO::FETCH_ASSOC);
+                    . ' WHERE backend_status = \'upd\' OR backend_status IS NULL')->fetchAll(PDO::FETCH_ASSOC);
 else
     $existingDomains = $pdo->query('SELECT * FROM domain_reseller.srv_registered()'
-            .' WHERE backend_status = \'upd\'')
-        ->fetchAll(PDO::FETCH_ASSOC);
+                    . ' WHERE backend_status = \'upd\'')
+            ->fetchAll(PDO::FETCH_ASSOC);
 
 
 // check if created and move to existing if created
 $forCreationDomains = $pdo->query('SELECT * FROM domain_reseller.srv_registered()'
-        .' WHERE backend_status = \'ins\'')
-    ->fetchAll(PDO::FETCH_ASSOC);
+                . ' WHERE backend_status = \'ins\'')
+        ->fetchAll(PDO::FETCH_ASSOC);
 
-// check if deleted and in case they are put to 'old' state
+// check if deleted and in case they are, put to 'old' state
 $forDeletionDomains = $pdo->query('SELECT * FROM domain_reseller.srv_registered(p_include_inactive:=TRUE)'
-        .' WHERE backend_status=\'del\'')->fetchAll(PDO::FETCH_ASSOC);
+                . ' WHERE backend_status=\'del\'')->fetchAll(PDO::FETCH_ASSOC);
 
 if (empty($existingDomains) && empty($forCreationDomains) && empty($forDeletionDomains)) {
     if ($debug)
@@ -80,19 +80,19 @@ $newRequest = function () use ($getopt) {
     $request = new api\Request(true);
 
     $request->addAuth(
-        $getopt->getOption('user')
-        , $getopt->getOption('password')
-        , '4'
+            $getopt->getOption('user')
+            , $getopt->getOption('password')
+            , '4'
     );
 
     return $request;
 };
 
 $fwdStatus = $pdo->prepare('SELECT domain_reseller.fwd_registered_status'
-    .'(p_domain := ?, p_payable := ?, p_period := ?, p_registrar_status := ?, p_registry_status := ?, p_last_status := ?)');
+        . '(p_domain := ?, p_payable := ?, p_period := ?, p_registrar_status := ?, p_registry_status := ?, p_last_status := ?)');
 
 $fwdBackendStatus = $pdo->prepare('SELECT dns.fwd_registered_status'
-    .'(p_domain := ?, p_backend_status := ?)');
+        . '(p_domain := ?, p_backend_status := ?)');
 
 $newDomainLookup = function ($name) use ($newRequest, $debug, $fwdStatus) {
     $request = $newRequest();
@@ -100,8 +100,8 @@ $newDomainLookup = function ($name) use ($newRequest, $debug, $fwdStatus) {
     $domainInquire = new api\DomainInquire($request);
     $domainInquire->addKeys(['registrar_status', 'payable']);
     $domainInquire->task
-        ->appendChild(new \DOMElement('domain'))
-        ->appendChild(new \DOMElement('name', $name));
+            ->appendChild(new \DOMElement('domain'))
+            ->appendChild(new \DOMElement('name', $name));
 
     $request->execute();
 
@@ -177,7 +177,7 @@ foreach ($existingDomains as $domain) {
         $adminc = $domain['admin_c_id'];
 
         if (!$ownerc || !$adminc)
-            throw new api\ApiException('OwnerC or AdminC missing for '.$name.PHP_EOL);
+            throw new api\ApiException('OwnerC or AdminC missing for ' . $name . PHP_EOL);
 
         $techc = $domain['tech_c_id'];
         if (!$techc)
@@ -189,9 +189,9 @@ foreach ($existingDomains as $domain) {
 
 
         if ($domainData['ownerc'] == $ownerc &&
-            $domainData['adminc'] == $adminc &&
-            $domainData['techc'] == $techc &&
-            $domainData['zonec'] == $zonec
+                $domainData['adminc'] == $adminc &&
+                $domainData['techc'] == $techc &&
+                $domainData['zonec'] == $zonec
         ) {
             if ($debug)
                 echo "Nothing to change for {$name}, continue with next\n";
@@ -219,19 +219,31 @@ foreach ($existingDomains as $domain) {
         if ($e->getCode() == '0105')
             echo "<3><ERROR> Domain '{$name}' not found\n";
         else
-            echo '<3><ERROR> '.$e->getMessage().PHP_EOL.$e->getTraceAsString().PHP_EOL;
+            echo '<3><ERROR> ' . $e->getMessage() . PHP_EOL . $e->getTraceAsString() . PHP_EOL;
     }
 }
 
 // remaining domains that have not been registered
 if (!empty($forCreationDomains))
     echo '<3>Domains which still need to be registered: '
-    .print_r($forCreationDomains, true);
+    . print_r($forCreationDomains, true);
+
+foreach ($forDeletionDomains as $domain) {
+    $request = $newRequest();
+    $domainCancelationInquire = new api\DomainCancelationInquire($request);
+    $domainCancelationInquire->task
+            ->appendChild(new \DOMElement('cancelation'))
+            ->appendChild(new \DOMElement('domain', $domain['domain']));
+    $request->execute();
+    $data = api\Utils::toArray($domainInquire->getData()[0]);
+    print_r($data);
+}
+
 
 // remaining domain that have not been deleted
 if (!empty($forDeletionDomains))
     echo '<3>Domains which still need to be deleted: '
-    .print_r($forDeletionDomains, true);
+    . print_r($forDeletionDomains, true);
 
 $pdo->commit();
 

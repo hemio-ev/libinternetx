@@ -89,7 +89,6 @@ foreach ($registered as $domain) {
 
     $zoneUpdate->addNsAction('complete');
     $zoneUpdate->addSoaLevel($getopt->getOption('soa-level'));
-    $zoneUpdate->addWwwInclude('0');
 
     $zoneUpdate->addNameserver('a.ns14.net');
     $zoneUpdate->addNameserver('b.ns14.net');
