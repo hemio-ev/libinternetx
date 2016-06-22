@@ -1,2 +1,7 @@
+v0.2.0
+  - Adds domain cancelation inquires
+  - [bin] Changed: Do not warn about domains scheduled for deletion
+  - [bin] Adds setting the www-include option
+  - [bin] Adds support for dns record types TXT and NS
 v0.1.0
   - First realease used in production
