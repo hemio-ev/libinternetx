@@ -62,8 +62,11 @@ class Utils
         return $result;
     }
 
-    public static function toArray(\DOMElement $element)
+    public static function toArray(\DOMElement $element = null)
     {
+        if (!$element)
+            return null;
+
         $result = [];
 
         foreach ($element->childNodes as $child)
