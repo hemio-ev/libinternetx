@@ -140,17 +140,13 @@ foreach ($registered as $domain) {
                 throw new Exception('Unknown type '.$type);
         }
 
-        if (!is_array($data))
-            $data = [$data];
-
-        foreach ($data as $dat)
-            $zoneUpdate->addResourceRecord(
-                $domain
-                , $type
-                , $dat
-                , $ttl
-                , $pref
-            );
+        $zoneUpdate->addResourceRecord(
+            $domain
+            , $type
+            , is_array($data) ? '"'.implode('" "', $data).'"' : $data
+            , $ttl
+            , $pref
+        );
     }
 }
 
