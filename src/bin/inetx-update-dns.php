@@ -133,20 +133,24 @@ foreach ($registered as $domain) {
                 break;
 
             case 'TXT':
-                $data = implode('', $rdata->txtdata);
+                $data = $rdata->txtdata;
                 break;
 
             default:
                 throw new Exception('Unknown type '.$type);
         }
 
-        $zoneUpdate->addResourceRecord(
-            $domain
-            , $type
-            , $data
-            , $ttl
-            , $pref
-        );
+        if (!is_array($data))
+            $data = [$data];
+
+        foreach ($data as $dat)
+            $zoneUpdate->addResourceRecord(
+                $domain
+                , $type
+                , $dat
+                , $ttl
+                , $pref
+            );
     }
 }
 
